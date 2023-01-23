@@ -9,6 +9,9 @@ node {
 				sh './jenkins/scripts/test.sh' 
 			}
 			stage('Deploy') { 
+				sh './jenkins/scripts/deliver.sh'
+                		sleep(30)
+                		sh './jenkins/scripts/kill.sh'
 			}
 		}
 	}
