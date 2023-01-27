@@ -1,17 +1,33 @@
-node { 
-    checkout scm
-    docker.image('node:16-buster-slim').inside('-p 3000:3000') {
-		withEnv(["CI=true"]){ 
-			stage('Build') { 
-				sh 'npm install' 
-			}
-			stage('Test') { 
-				sh './jenkins/scripts/test.sh' 
-			}
-			stage('Deploy') { 
-				sh './jenkins/scripts/deliver.sh'
-                		sh './jenkins/scripts/kill.sh'
-			}
-		}
-	}
+pipeline {
+    agent {
+        docker {
+            image 'node:lts-bullseye-slim'
+            args '-p 3000:3000'
+        }
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh "chmod +x -R ${env.WORKSPACE}"
+                sh './jenkins/scripts/test.sh'
+            }
+        }
+        stage('Manual Approval') {
+            steps {
+                input message: 'Lanjutkan ke tahap Deploy?'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh './jenkins/scripts/deliver.sh' 
+                sleep 60
+                sh './jenkins/scripts/kill.sh' 
+            }
+        }
+    }
 }
